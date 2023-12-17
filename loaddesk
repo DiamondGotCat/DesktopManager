@@ -1,0 +1,58 @@
+#!/usr/bin/env python
+
+import os
+import json
+import shutil
+
+def load_desk():
+    hidden_desk_path = os.path.expanduser("~/Documents/HiddenDesk")
+    desktop_path = os.path.expanduser("~/Desktop")
+
+    available_json_files = [f for f in os.listdir(hidden_desk_path) if f.startswith("Desk-") and f.endswith(".json")]
+
+    if not available_json_files:
+        print("No saved desktop structures found.")
+        return
+
+    print("Available JSON files:")
+    for i, json_file in enumerate(available_json_files):
+        print(f"{i + 1}. {json_file}")
+
+    selection = input("Enter the number of the JSON file to load: ")
+
+    try:
+        selection_index = int(selection) - 1
+        selected_json_file = available_json_files[selection_index]
+        desk_json_path = os.path.join(hidden_desk_path, selected_json_file)
+
+        with open(desk_json_path, "r") as desk_json:
+            desk_structure = json.load(desk_json)
+
+        for item_info in desk_structure.values():
+            original_name = item_info["original_name"]
+            file_id = item_info["file_id"]
+            is_dir = item_info["is_dir"]
+
+            dest_path = os.path.join(desktop_path, original_name)
+
+            if is_dir:
+                item_path = os.path.join(hidden_desk_path, file_id)
+            else:
+                item_path = os.path.join(hidden_desk_path, file_id)
+
+            try:
+                shutil.move(item_path, dest_path)
+            except FileNotFoundError:
+                print(f"Item not found: {item_path}")
+
+        print(f"Desktop structure loaded from {desk_json_path}")
+
+        # Delete the loaded JSON file
+        os.remove(desk_json_path)
+        print(f"Loaded JSON file deleted: {desk_json_path}")
+
+    except (ValueError, IndexError):
+        print("Invalid selection.")
+
+if __name__ == "__main__":
+    load_desk()

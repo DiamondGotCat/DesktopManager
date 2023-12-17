@@ -1,0 +1,37 @@
+#!/usr/bin/env python
+
+import os
+import json
+import uuid
+import shutil
+
+def save_desk():
+    desktop_path = os.path.expanduser("~/Desktop")
+    hidden_desk_path = os.path.expanduser("~/Documents/HiddenDesk")
+
+    if not os.path.exists(hidden_desk_path):
+        os.makedirs(hidden_desk_path)
+
+    desk_id = str(uuid.uuid4())
+    desk_json_name = f"Desk-{desk_id}.json"
+    desk_json_path = os.path.join(hidden_desk_path, desk_json_name)
+
+    desk_structure = {}
+
+    for root, dirs, files in os.walk(desktop_path):
+        for item in files + dirs:
+            if item not in [".DS_Store", ".localized"]:  # Exclude .DS_Store and .localized files
+                item_id = str(uuid.uuid4())
+                src_path = os.path.join(root, item)
+                dest_path = os.path.join(hidden_desk_path, item_id)
+
+                shutil.move(src_path, dest_path)
+                desk_structure[item_id] = {"original_name": item, "file_id": item_id, "is_dir": os.path.isdir(dest_path)}
+
+    with open(desk_json_path, "w") as desk_json:
+        json.dump(desk_structure, desk_json)
+
+    print(f"Desktop structure saved to {desk_json_path}")
+
+if __name__ == "__main__":
+    save_desk()
